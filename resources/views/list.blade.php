@@ -1,11 +1,17 @@
 @extends('main')
 @section('content')
     <div class="main">
-        <p>Hello list</p>
-        <a href="/">Back</a>
+        <div class="info">
+            <h1>List of latest currencies</h1>
+            <a href="/">Back</a>
+            <p>Base: {{ $data->base }}</p>
+        </div>
     </div>
-    <p>Base: {{ $data->base }}</p>
-    @foreach($data->rates as $currency => $rate)
-        <p>{{ $currency }}: {{ round($rate, 6) }}</p>
-    @endforeach
+    <div class="currencies">
+        <div class="d-flex">
+            @foreach($data->rates as $currency => $rate)
+                <p>{{ $currency }}: {{ round($rate, 6) }}</p>
+            @endforeach
+        </div>
+    </div>
 @endsection

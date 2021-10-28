@@ -1,5 +1,5 @@
 p {
-    font-size: 50px;
+    font-size: 25px;
 }
 
 .info {
@@ -71,6 +71,8 @@ p {
     display: flex;
     justify-content: center;
     align-items: center;
+    width: 60%;
+    margin: auto;
 }
 
 .d-flex {
@@ -81,8 +83,15 @@ p {
     flex-direction: column;
 }
 
-.red {
+.red, .error {
     color: red;
+}
+
+.error {
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    font-size: 15px;
 }
 
 .green {

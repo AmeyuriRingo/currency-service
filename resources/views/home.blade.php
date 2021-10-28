@@ -2,9 +2,16 @@
 @section('content')
     <div class="main">
         <div class="info">
-            <p class="title">Functions:</p>
+            <h1 class="title">Functions:</h1>
         </div>
-
+        <div class="error">
+            @if(isset($list_error))
+                {{ $list_error }}
+            @endif
+            @if(isset($recommendations_error))
+                    {{ $recommendations_error }}
+            @endif
+        </div>
         <div class="currencies-list">
             <form method="get" action="/list" class="form">
                 <div class="row">

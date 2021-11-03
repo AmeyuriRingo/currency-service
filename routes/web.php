@@ -15,5 +15,6 @@
 
 $router->get('/', 'PageController@index');
 
-$router->get('/list', 'PageController@list');
-$router->get('/recommendations', 'PageController@recommendations');
+$router->get('/currencies/latest-rates', 'PageController@latestList');
+$router->get('/currencies/latest-rates-with-symbols', 'PageController@listWithSymbols');
+$router->get('/currencies/recommendations', 'PageController@recommendations');

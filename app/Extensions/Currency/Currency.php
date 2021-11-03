@@ -55,7 +55,7 @@ class Currency
     }
 
     /**
-     * Generates response according on given data
+     * Generates response according to given data
      *
      * @param $baseUri
      * @param $method

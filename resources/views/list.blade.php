@@ -10,7 +10,7 @@
     <div class="currencies">
         <div class="d-flex">
             @foreach($data->rates as $currency => $rate)
-                <p>{{ $currency }}: {{ round($rate, 6) }}</p>
+                <p>{{ $currency }}: {{ round($rate, 2) }}</p>
             @endforeach
         </div>
     </div>

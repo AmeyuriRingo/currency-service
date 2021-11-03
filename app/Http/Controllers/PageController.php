@@ -6,6 +6,7 @@ use App\Extensions\Currency\Currency;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Laravel\Lumen\Application;
+use Illuminate\Support\Carbon;
 
 class PageController extends Controller
 {
@@ -50,7 +51,9 @@ class PageController extends Controller
      * @return View|Application
      */
     public function recommendations(Request $request) {
+        $now = Carbon::now()->toDateString();
         if ($request->start_date > $request->end_date) return view('home', ['recommendations_error' => 'The start date cannot be later than the end date']);
+        if ($request->start_date > $now || $request->end_date > $now) return view('home', ['recommendations_error' => 'Invalid start or end date']);
         $recommendations = Currency::getRecommendations($request->start_date, $request->end_date, $request->symbols);
         if (isset($recommendations->error)) return view('home', ['recommendations_error' => $recommendations->error]);
         return view('recommendations', ['data' => $recommendations]);

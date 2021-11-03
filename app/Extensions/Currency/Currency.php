@@ -44,6 +44,10 @@ class Currency
 
         $startResponse = self::client('http://api.exchangeratesapi.io', 'GET', $startUri);
         $endResponse =  self::client('http://api.exchangeratesapi.io', 'GET', $endUri);
+
+        if (isset($startResponse->error)) return $startResponse;
+        if (isset($endResponse->error)) return $endResponse;
+
         foreach ($startResponse->rates as $startCurrency => $startRate) {
             foreach ($endResponse->rates as $endCurrency => $endRate) {
                 if ($startCurrency === $endCurrency) {

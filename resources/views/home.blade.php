@@ -5,37 +5,37 @@
             <h1 class="title">Functions:</h1>
         </div>
         <div class="error">
-            @if(isset($list_error))
-                {{ $list_error }}
-            @endif
-            @if(isset($recommendations_error))
-                    {{ $recommendations_error }}
+            @if(isset($error))
+                {{ $error }}
             @endif
         </div>
         <div class="currencies-list">
-            <form method="get" action="/currencies/latest-rates-with-symbols" class="form">
+            <form method="get" action="/currencies/rate" class="form">
                 <div class="row">
-                    <label for="symbols" class="label">List of currencies: </label>
-                    <input type="text" id="symbols" name="symbols" class="input" required>
+                    <label for="base" class="label">Base currency: </label>
+                    <input type="text" id="base" name="base" class="input" required>
+                </div>
+                <div class="row">
+                    <label for="symbol" class="label">Symbol: </label>
+                    <input type="text" id="symbol" name="symbol" class="input" required>
                 </div>
                 <button type="submit" class="btn">Submit</button>
             </form>
-            <a href="/currencies/latest-rates" class="link">List of latest exchange rates</a>
         </div>
         <br><br>
         <div class="recommendations-list">
             <form method="get" action="/currencies/recommendations" class="form">
                 <div class="row">
-                    <label for="start_date" class="label">Start date:</label>
-                <input type="date" id="start_date" name="start_date" class="input" required>
+                    <label for="base" class="label">Base currency: </label>
+                    <input type="text" id="base" name="base" class="input" required>
                 </div>
                 <div class="row">
-                    <label for="end_date" class="label">End date:</label>
-                <input type="date" id="end_date" name="end_date" class="input" required>
+                    <label for="date" class="label">Date:</label>
+                <input type="date" id="date" name="date" class="input" required>
                 </div>
                 <div class="row">
-                    <label for="symbols" class="label">List of currencies: </label>
-                <input type="text" id="symbols" name="symbols" class="input">
+                    <label for="symbol" class="label">Symbol: </label>
+                    <input type="text" id="symbol" name="symbol" class="input" required>
                 </div>
                 <button type="submit" class="btn">Submit</button>
             </form>

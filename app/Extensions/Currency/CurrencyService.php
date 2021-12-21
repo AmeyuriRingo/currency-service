@@ -2,9 +2,6 @@
 
 namespace App\Extensions\Currency;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
-use App\Enums\CurrenciesEnum;
 use App\Contracts\Currency;
 
 /**
@@ -12,9 +9,9 @@ use App\Contracts\Currency;
  */
 class CurrencyService implements Currency
 {
-    private $model;
+    private Currency $model;
 
-    public function __construct($model)
+    public function __construct(Currency $model)
     {
         $this->model = $model;
     }
@@ -22,26 +19,26 @@ class CurrencyService implements Currency
     /**
      * Returns the list of the latest exchange rates
      *
-     * @param string $symbols
-     * @return mixed|object|string
-     * @throws GuzzleException
+     * @param $base
+     * @param $symbol
+     * @param string $date
+     * @return float
      */
-    public function getList($symbols = '')
+    public function getRate($base, $symbol, $date = ''): float
     {
-        return $this->model->getList($symbols);
+        return $this->model->getRate($base, $symbol, $date);
     }
 
     /**
      * Return recommendations according to date
      *
-     * @param int $startDate
-     * @param int $endDate
-     * @param string $symbols
-     * @return array|mixed|object|object[]|string
-     * @throws GuzzleException
+     * @param $base
+     * @param $symbol
+     * @param $date
+     * @return float
      */
-    public function getRecommendations($startDate = 0, $endDate = 0, $symbols = '')
+    public function getRecommendation($base, $symbol, $date): float
     {
-        return $this->model->getRecommendations($startDate, $endDate, $symbols);
+        return $this->model->getRecommendation($base, $symbol, $date);
     }
 }

@@ -2,9 +2,7 @@
 
 namespace App\Extensions\ExchangeRates;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
-use App\Enums\CurrenciesEnum;
+use App\Contracts\ClientInterface;
 use App\Contracts\Currency;
 
 /**
@@ -12,116 +10,37 @@ use App\Contracts\Currency;
  */
 class ExchangeRates implements Currency
 {
-    private string $token;
+    private ClientInterface $client;
 
-    public function __construct(string $token)
+    public function __construct(ClientInterface $client)
     {
-        $this->token = $token;
+        $this->client = $client;
     }
 
     /**
-     * Returns exchangeratesapi response of the latest exchange rates
+     * Returns exchangeratesapi response of the exchange rate
      *
-     * @param string $symbols
+     * @param $base
+     * @param $symbol
+     * @param string $date
      * @return mixed|object|string
-     * @throws GuzzleException
      */
-    public function getList($symbols = '')
+    public function getRate($base, $symbol, $date = ''): float
     {
-        $uri = '/v1/latest?access_key=' . $this->token;
-
-        if (!empty($symbols)) {
-            $uri = self::getUriWithSymbols($symbols, $uri);
-        }
-
-        if (isset($uri->error)) {
-            return $uri;
-        }
-        return $this->client('http://api.exchangeratesapi.io', 'GET', $uri);
+        return $this->client->getLatest($base, $symbol);
     }
 
     /**
      * Return exchangeratesapi response according to date
      *
-     * @param int $startDate
-     * @param int $endDate
-     * @param string $symbols
-     * @return array|mixed|object|object[]|string
-     * @throws GuzzleException
+     * @param $base
+     * @param string $symbol
+     * @param $date
+     * @return float
      */
-    public function getRecommendations($startDate = 0, $endDate = 0, $symbols = '')
+    public function getRecommendation($base, $symbol, $date): float
     {
-        $startUri = '/v1/' . $startDate . '?access_key=' . $this->token;
-        $endUri = '/v1/' . $endDate . '?access_key=' . $this->token;
-
-        if (!empty($symbols)) {
-            $startUri = $this->getUriWithSymbols($symbols, $startUri);
-            $endUri = $this->getUriWithSymbols($symbols, $endUri);
-        }
-
-        if (isset($startUri->error) || isset($endUri->error)) {
-            return $startUri;
-        }
-
-        $startResponse = $this->client('http://api.exchangeratesapi.io', 'GET', $startUri);
-        $endResponse = $this->client('http://api.exchangeratesapi.io', 'GET', $endUri);
-
-        if (isset($startResponse->error)) {
-            return $startResponse;
-        }
-
-        if (isset($endResponse->error)) {
-            return $endResponse;
-        }
-
-        foreach ($startResponse->rates as $startCurrency => $startRate) {
-            foreach ($endResponse->rates as $endCurrency => $endRate) {
-                if ($startCurrency === $endCurrency) {
-                    $endResponse->rates->$endCurrency = ['rate' => $endRate, 'difference' => round($endRate - $startRate, 6)];
-                }
-            }
-        }
-        return ['start' => $startResponse, 'end' => $endResponse];
+        return $this->client->getRecommendation($base, $symbol, $date);
     }
 
-    /**
-     * Generates response according to given data
-     *
-     * @param $baseUri
-     * @param $method
-     * @param $uri
-     * @return mixed
-     * @throws GuzzleException
-     */
-    protected function client($baseUri, $method, $uri)
-    {
-        $client = new Client(['base_uri' => $baseUri]);
-        try {
-            $response = $client->request($method, $uri);
-            return json_decode($response->getBody()->getContents());
-        } catch (\Exception $e) {
-            return (object)['error' => $e->getMessage()];
-        }
-    }
-
-    /**
-     * Generates uri according to given currencies
-     *
-     * @param $symbols
-     * @param $uri
-     * @return mixed|object|string
-     */
-    protected function getUriWithSymbols($symbols, $uri)
-    {
-        $symbols = explode(',', $symbols);
-        $currencies_list = CurrenciesEnum::toArray();
-        foreach ($symbols as $key => $symbol) {
-            if (!empty($currencies_list[trim($symbol)])) {
-                $uri = $key === 0 ? $uri . '&symbols=' . trim($symbol) : $uri . ',' . trim($symbol);
-            } else {
-                return (object)['error' => 'Incorrect currency: ' . trim($symbol)];
-            }
-        }
-        return $uri;
-    }
 }

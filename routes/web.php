@@ -13,8 +13,10 @@
 |
 */
 
-$router->get('/', 'PageController@index');
+$router->get('/',[
+    'as' => 'home',
+    'uses' => 'PageController@index']
+);
 
-$router->get('/currencies/latest-rates', 'PageController@latestList');
-$router->get('/currencies/latest-rates-with-symbols', 'PageController@listWithSymbols');
+$router->get('/currencies/rate', 'PageController@rate');
 $router->get('/currencies/recommendations', 'PageController@recommendations');

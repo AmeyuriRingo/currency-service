@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Contracts\Currency;
+use App\Enums\CurrenciesEnum;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Laravel\Lumen\Application;
-use Illuminate\Support\Carbon;
 
 class PageController extends Controller
 {
@@ -28,34 +28,31 @@ class PageController extends Controller
     }
 
     /**
-     * Return page with list of the latest currencies.
-     *
-     * @return View|Application
-     */
-    public function latestList()
-    {
-        $list = $this->currency->getList();
-
-        if (isset($list->error)) {
-            return view('home', ['list_error' => $list->error]);
-        }
-        return view('list', ['data' => $list]);
-    }
-
-    /**
-     * Return page with list of the latest currencies according to symbols.
+     * Return page with the exchange rate according to the base currency and symbol.
      *
      * @param Request $request
      * @return View|Application
      */
-    public function listWithSymbols(Request $request)
+    public function rate(Request $request)
     {
-        $list = $this->currency->getList($request->symbols);
-
-        if (isset($list->error)) {
-            return view('home', ['list_error' => $list->error]);
+        $currencies_list = CurrenciesEnum::toArray();
+        if (empty($currencies_list[trim($request->symbol)])) {
+            return view('home', ['error' => 'Incorrect currency: ' . $request->symbol]);
         }
-        return view('list', ['data' => $list]);
+
+        $rate = $this->currency->getRate($request->base, $request->symbol);
+
+        if ($rate !== 0.0) {
+            return view('rate', ['data' => [
+                'base'=> 'EUR',
+                'symbol' => $request->symbol,
+                'rate'=> $rate
+            ]]);
+        } else {
+            return view('errors.404');
+        }
+
+
     }
 
     /**
@@ -66,20 +63,18 @@ class PageController extends Controller
      */
     public function recommendations(Request $request)
     {
-        $now = Carbon::now()->toDateString();
-
-        if ($request->start_date > $request->end_date) {
-            return view('home', ['recommendations_error' => 'The start date cannot be later than the end date']);
-        }
-        if ($request->start_date > $now || $request->end_date > $now) {
-            return view('home', ['recommendations_error' => 'Invalid start or end date']);
+        $currencies_list = CurrenciesEnum::toArray();
+        if (empty($currencies_list[trim($request->symbol)])) {
+            return view('home', ['error' => 'Incorrect currency: ' . $request->symbol]);
         }
 
-        $recommendations = $this->currency->getRecommendations($request->start_date, $request->end_date, $request->symbols);
+        $recommendation = $this->currency->getRecommendation($request->base, $request->symbol, $request->date);
 
-        if (isset($recommendations->error)) {
-            return view('home', ['recommendations_error' => $recommendations->error]);
-        }
-        return view('recommendations', ['data' => $recommendations]);
+        return view('recommendations', ['data' => [
+            'base'=> 'EUR',
+            'symbol' => $request->symbol,
+            'date' => $request->date,
+            'recommendation'=> $recommendation
+        ]]);
     }
 }

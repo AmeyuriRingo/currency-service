@@ -4,8 +4,10 @@ namespace App\Contracts;
 
 interface Currency
 {
-    public function getRate($base, $symbol, $date = ''): float;
+    public function getLatestRate($base, $symbol): float;
 
-    public function getRecommendation($base, $symbol, $date): float;
+    public function getRateByDate($base, $symbol, $date): float;
+
+    public function getRecommendation($base, $symbol, $strategy, $date = ''): float;
 
 }

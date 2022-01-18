@@ -19,4 +19,5 @@ $router->get('/',[
 );
 
 $router->get('/currencies/rate', 'PageController@rate');
+$router->get('/currencies/rate-by-date', 'PageController@rateByDate');
 $router->get('/currencies/recommendations', 'PageController@recommendations');

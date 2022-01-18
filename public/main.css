@@ -9,7 +9,7 @@ p {
     flex-direction: column;
 }
 
-.currencies-list, .recommendations-list {
+.currencies-form {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -36,6 +36,31 @@ p {
     border-color: #86b7fe;
     outline: 0;
     box-shadow: 0 0 0 0.25rem rgb(13 110 253 / 25%);
+}
+
+.form .select {
+    margin-left: 10px;
+    position: relative;
+    cursor: pointer;
+    background-color: transparent;
+    border: none;
+    border-bottom: 1px solid #9e9e9e;
+    outline: none;
+    width: 180px;
+    padding: 0;
+    display: block;
+    user-select: none;
+    z-index: 1;
+}
+
+.form .select .option {
+    clear: both;
+    color: rgba(0,0,0,0.87);
+    cursor: pointer;
+    min-height: 50px;
+    line-height: 1.5rem;
+    width: 100%;
+    text-align: left;
 }
 
 .form .btn {
@@ -73,6 +98,10 @@ p {
     align-items: center;
     width: 60%;
     margin: auto;
+}
+
+#dateRow {
+    display: none;
 }
 
 .d-flex {

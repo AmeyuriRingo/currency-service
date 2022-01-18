@@ -21,12 +21,24 @@ class CurrencyService implements Currency
      *
      * @param $base
      * @param $symbol
+     * @return float
+     */
+    public function getLatestRate($base, $symbol): float
+    {
+        return $this->model->getLatestRate($base, $symbol);
+    }
+
+    /**
+     * Returns exchangeratesapi response of the exchange rate
+     *
+     * @param $base
+     * @param $symbol
      * @param string $date
      * @return float
      */
-    public function getRate($base, $symbol, $date = ''): float
+    public function getRateByDate($base, $symbol, $date): float
     {
-        return $this->model->getRate($base, $symbol, $date);
+        return $this->model->getRateByDate($base, $symbol, $date);
     }
 
     /**
@@ -35,10 +47,11 @@ class CurrencyService implements Currency
      * @param $base
      * @param $symbol
      * @param $date
+     * @param $strategy
      * @return float
      */
-    public function getRecommendation($base, $symbol, $date): float
+    public function getRecommendation($base, $symbol, $strategy, $date = ''): float
     {
-        return $this->model->getRecommendation($base, $symbol, $date);
+        return $this->model->getRecommendation($base, $symbol, $strategy, $date);
     }
 }

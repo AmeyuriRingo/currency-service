@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Contracts\Currency;
 use App\Enums\CurrenciesEnum;
+use App\Enums\StrategiesEnum;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Laravel\Lumen\Application;
@@ -24,7 +25,7 @@ class PageController extends Controller
      */
     public function index()
     {
-        return view('home');
+        return view('home', ['strategies' => StrategiesEnum::toArray()]);
     }
 
     /**
@@ -40,20 +41,49 @@ class PageController extends Controller
             return view('home', ['error' => 'Incorrect currency: ' . $request->symbol]);
         }
 
-        $rate = $this->currency->getRate($request->base, $request->symbol);
+        try {
+            $rate = $this->currency->getLatestRate($request->base, $request->symbol);
 
-        if ($rate !== 0.0) {
             return view('rate', ['data' => [
                 'base'=> 'EUR',
                 'symbol' => $request->symbol,
                 'rate'=> $rate
             ]]);
-        } else {
-            return view('errors.404');
+        } catch (\Exception $e) {
+
+            return view('errors.404', ['errorMessage' => $e->getMessage()]);
         }
 
-
     }
+
+    /**
+     * Return page with list of rates recommendations according to start and end dates.
+     *
+     * @param Request $request
+     * @return View|Application
+     */
+    public function rateByDate(Request $request)
+    {
+        $currencies_list = CurrenciesEnum::toArray();
+        if (empty($currencies_list[trim($request->symbol)])) {
+            return view('home', ['error' => 'Incorrect currency: ' . $request->symbol]);
+        }
+
+        try {
+            $rate = $this->currency->getRateByDate($request->base, $request->symbol, $request->date);
+
+            return view('rate', ['data' => [
+                'base'=> 'EUR',
+                'symbol' => $request->symbol,
+                'date' => $request->date,
+                'rate'=> $rate
+            ]]);
+        } catch (\Exception $e) {
+
+            return view('errors.404', ['errorMessage' => $e->getMessage()]);
+        }
+    }
+
 
     /**
      * Return page with list of rates recommendations according to start and end dates.
@@ -68,13 +98,18 @@ class PageController extends Controller
             return view('home', ['error' => 'Incorrect currency: ' . $request->symbol]);
         }
 
-        $recommendation = $this->currency->getRecommendation($request->base, $request->symbol, $request->date);
+        try {
+            $recommendation = $this->currency->getRecommendation($request->base, $request->symbol, $request->strategy, $request->date);
 
-        return view('recommendations', ['data' => [
-            'base'=> 'EUR',
-            'symbol' => $request->symbol,
-            'date' => $request->date,
-            'recommendation'=> $recommendation
-        ]]);
+            return view('recommendations', ['data' => [
+                'base'=> 'EUR',
+                'symbol' => $request->symbol,
+                'date' => $request->date,
+                'recommendation'=> $recommendation
+            ]]);
+        } catch (\Exception $e) {
+
+            return view('errors.404', ['errorMessage' => $e->getMessage()]);
+        }
     }
 }

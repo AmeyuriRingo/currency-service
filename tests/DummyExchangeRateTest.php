@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\StrategiesEnum;
 use App\Extensions\DummyExchangeRates\DummyExchangeRate;
 
 class DummyExchangeRateTest extends TestCase
@@ -15,24 +16,57 @@ class DummyExchangeRateTest extends TestCase
     }
 
     /**
-     * Test dummy get rate method.
+     * Test dummy get latest rate method.
      */
-    public function testDummyGetRate()
+    public function testDummyGetLatestRate()
     {
         $this->assertEquals(
-            3.1212,
-            $this->dummyExchangeRate->getRate('BYN', 'EUR')
+            3.124,
+            $this->dummyExchangeRate->getLatestRate('BYN', 'EUR')
         );
     }
 
     /**
-     * Test dummy get recommendations method.
+     * Test dummy get rate by date method.
      */
-    public function testDummyGetRecommendations()
+    public function testDummyGetRateByDate()
     {
         $this->assertEquals(
-            0.123,
-            $this->dummyExchangeRate->getRecommendation('BYN', 'EUR', '11-11-2011')
+            4.567,
+            $this->dummyExchangeRate->getRateByDate('BYN', 'EUR', '11-12-2021')
+        );
+    }
+
+    /**
+     * Test dummy get latest recommendation method with date.
+     */
+    public function testDummyGetLatestRecommendationWithDate()
+    {
+        $this->assertEquals(
+            1.5786,
+            $this->dummyExchangeRate->getRecommendation('BYN', 'EUR',StrategiesEnum::LATEST, '11-11-2011')
+        );
+    }
+
+    /**
+     * Test dummy get latest recommendation method without date.
+     */
+    public function testDummyGetLatestRecommendationWithoutDate()
+    {
+        $this->assertEquals(
+            1.5786,
+            $this->dummyExchangeRate->getRecommendation('BYN', 'EUR',StrategiesEnum::LATEST)
+        );
+    }
+
+    /**
+     * Test dummy get recommendation by date method.
+     */
+    public function testDummyGetRecommendationByDate()
+    {
+        $this->assertEquals(
+            0.5786,
+            $this->dummyExchangeRate->getRecommendation('BYN', 'EUR',StrategiesEnum::BY_DATE, '11-11-2011')
         );
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Extensions\DummyExchangeRates;
 
-use GuzzleHttp\Exception\GuzzleException;
+use App\Enums\StrategiesEnum;
 use App\Contracts\Currency;
 
 /**
@@ -12,29 +12,42 @@ class DummyExchangeRate implements Currency
 {
 
     /**
-     * Returns exchangeratesapi response of the latest exchange rates
-     *
+     * @param $base
+     * @param $symbol
+     * @return float Returns exchangeratesapi response of the latest exchange rate
+     */
+    public function getLatestRate($base, $symbol): float
+    {
+        return 3.124;
+    }
+
+    /**
      * @param $base
      * @param $symbol
      * @param string $date
-     * @return mixed|object|string
+     * @return float Returns exchangeratesapi response of the exchange rate for the selected date
      */
-    public function getRate($base, $symbol, $date = ''): float
+    public function getRateByDate($base, $symbol, $date): float
     {
-        return 3.1212;
+        return 4.567;
     }
 
     /**
      * Return exchangeratesapi response according to date
      *
-     * @param string $startDate
-     * @param string $endDate
-     * @param string $symbol
-     * @return array|object[]
+     * @param $base
+     * @param $symbol
+     * @param string $date
+     * @param $strategy
+     * @return float
      */
-    public function getRecommendation($base, $symbol, $date): float
+    public function getRecommendation($base, $symbol, $strategy, $date = ''): float
     {
-        return 0.123;
+        if ($strategy === StrategiesEnum::LATEST) {
+            return 1.5786;
+        } else if ($strategy === StrategiesEnum::BY_DATE) {
+            return 0.5786;
+        }
     }
 
 }

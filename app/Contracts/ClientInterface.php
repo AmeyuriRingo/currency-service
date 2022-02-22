@@ -2,13 +2,14 @@
 
 namespace App\Contracts;
 
+use App\Extensions\Currency\Currency;
+use Carbon\Carbon;
+
 interface ClientInterface
 {
 
-    public function getLatest($base, $symbol): float;
+    public function getLatest(Currency $currency): Currency;
 
-    public function getByDate($base, $symbol, $date): float;
-
-    public function getRatesByDate($base, $symbol, $date): array;
+    public function getByDate(Currency $currency, Carbon $date): Currency;
 
 }

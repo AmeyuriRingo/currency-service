@@ -91,7 +91,7 @@ $app->configure('app');
 |
 */
 
- $app->register(App\Providers\CurrencyProvider::class);
+ $app->register(App\Providers\CurrencyServiceProvider::class);
 // $app->register(App\Providers\AuthServiceProvider::class);
 // $app->register(App\Providers\EventServiceProvider::class);
 

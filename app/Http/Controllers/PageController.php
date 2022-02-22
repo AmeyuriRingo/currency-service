@@ -2,18 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use App\Contracts\Currency;
-use App\Enums\CurrenciesEnum;
+use App\Contracts\CheckCurrency;
 use App\Enums\StrategiesEnum;
+use App\Extensions\Currency\Currency;
+use App\Contracts\CurrencyService;
+use App\Extensions\ExchangeRates\RecommendationStrategies\ByDateStrategy;
+use App\Extensions\ExchangeRates\RecommendationStrategies\LatestStrategy;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Laravel\Lumen\Application;
 
 class PageController extends Controller
 {
-    private Currency $currency;
+    private CurrencyService $currency;
 
-    public function __construct(Currency $currency)
+    public function __construct(CurrencyService $currency)
     {
         $this->currency = $currency;
     }
@@ -36,18 +40,21 @@ class PageController extends Controller
      */
     public function rate(Request $request)
     {
-        $currencies_list = CurrenciesEnum::toArray();
-        if (empty($currencies_list[trim($request->symbol)])) {
-            return view('home', ['error' => 'Incorrect currency: ' . $request->symbol]);
+        try {
+            $symbol = new CheckCurrency($request->symbol);
+            $base = new CheckCurrency($request->base);
+            $currency = new Currency($base->getCurrency(), $symbol->getCurrency());
+        } catch (\InvalidArgumentException $e) {
+            return view('home', ['error' => $e->getMessage(), 'strategies' => StrategiesEnum::toArray()]);
         }
 
         try {
-            $rate = $this->currency->getLatestRate($request->base, $request->symbol);
+            $rate = $this->currency->getLatestRate($currency);
 
             return view('rate', ['data' => [
                 'base'=> 'EUR',
                 'symbol' => $request->symbol,
-                'rate'=> $rate
+                'rate'=> $rate->getPrice()
             ]]);
         } catch (\Exception $e) {
 
@@ -64,19 +71,24 @@ class PageController extends Controller
      */
     public function rateByDate(Request $request)
     {
-        $currencies_list = CurrenciesEnum::toArray();
-        if (empty($currencies_list[trim($request->symbol)])) {
-            return view('home', ['error' => 'Incorrect currency: ' . $request->symbol]);
+        try {
+            $symbol = new CheckCurrency($request->symbol);
+            $base = new CheckCurrency($request->base);
+            $date = Carbon::createFromFormat('Y-m-d', $request->date);
+            $currency = new Currency($base->getCurrency(), $symbol->getCurrency());
+        } catch (\InvalidArgumentException $e) {
+            return view('home', ['error' => $e->getMessage()]);
         }
 
+
         try {
-            $rate = $this->currency->getRateByDate($request->base, $request->symbol, $request->date);
+            $rate = $this->currency->getRateByDate($currency, $date);
 
             return view('rate', ['data' => [
                 'base'=> 'EUR',
                 'symbol' => $request->symbol,
                 'date' => $request->date,
-                'rate'=> $rate
+                'rate'=> $rate->getPrice()
             ]]);
         } catch (\Exception $e) {
 
@@ -93,13 +105,24 @@ class PageController extends Controller
      */
     public function recommendations(Request $request)
     {
-        $currencies_list = CurrenciesEnum::toArray();
-        if (empty($currencies_list[trim($request->symbol)])) {
-            return view('home', ['error' => 'Incorrect currency: ' . $request->symbol]);
+        try {
+            $symbol = new CheckCurrency($request->symbol);
+            $base = new CheckCurrency($request->base);
+            $currency = new Currency($base->getCurrency(), $symbol->getCurrency());
+        } catch (\InvalidArgumentException $e) {
+            return view('home', ['error' => $e->getMessage()]);
         }
 
         try {
-            $recommendation = $this->currency->getRecommendation($request->base, $request->symbol, $request->strategy, $request->date);
+
+            if ($request->strategy == StrategiesEnum::LATEST()) {
+                $strategy = new LatestStrategy();
+                $recommendation = $this->currency->getRecommendation($currency, $strategy);
+            } else if ($request->strategy == StrategiesEnum::BY_DATE()) {
+                $strategy = new ByDateStrategy();
+                $date = Carbon::createFromFormat('Y-m-d', $request->date);
+                $recommendation = $this->currency->getRecommendation($currency, $strategy, $date);
+            }
 
             return view('recommendations', ['data' => [
                 'base'=> 'EUR',

@@ -2,23 +2,27 @@
 
 namespace App\Extensions\ExchangeRates;
 
-use App\Contracts\ClientInterface;
 use App\Contracts\RecommendationStrategy;
-use App\Extensions\Currency\Currency;
 use App\Contracts\CurrencyService;
+use App\Extensions\Currency\Currency;
 use Carbon\Carbon;
-use Exception;
 
 /**
  * ExchangeRates represents working with exchange rates api.
  */
-class ExchangeRates implements CurrencyService
+class DummyExchangeRate implements CurrencyService
 {
-    private ClientInterface $client;
 
-    public function __construct(ClientInterface $client)
+    private Currency $currency;
+
+    public function __construct()
     {
-        $this->client = $client;
+
+        $currency = new Currency('BYN', 'BRL');
+        $currency->setPrice(1.124);
+        $currency->setDate(Carbon::createFromFormat('Y-m-d', '2015-05-21'));
+
+        $this->currency = $currency;
     }
 
     /**
@@ -27,7 +31,7 @@ class ExchangeRates implements CurrencyService
      */
     public function getLatestRate(Currency $currency): Currency
     {
-        return $this->client->getLatest($currency);
+        return $this->currency;
     }
 
     /**
@@ -37,19 +41,20 @@ class ExchangeRates implements CurrencyService
      */
     public function getRateByDate(Currency $currency, Carbon $date): Currency
     {
-        return $this->client->getByDate($currency, $date);
+        return $this->currency;
     }
 
     /**
+     * Return exchangeratesapi response according to date
+     *
      * @param Currency $currency
      * @param RecommendationStrategy $strategy
      * @param Carbon|null $date
-     * @return float Return exchangeratesapi response according to date
-     * @throws Exception
+     * @return float
      */
     public function getRecommendation(Currency $currency, RecommendationStrategy $strategy, Carbon $date = null): float
     {
-        return $strategy->execute($currency, $this->client, $date);
+        return 3.124;
     }
 
 }

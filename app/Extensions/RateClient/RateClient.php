@@ -2,10 +2,12 @@
 
 namespace App\Extensions\RateClient;
 
+use App\Extensions\Currency\Currency;
+use Carbon\Carbon;
 use Exception;
 use GuzzleHttp\Client;
 use App\Contracts\ClientInterface;
-use Illuminate\Support\Facades\Log;
+use Psr\Log\LoggerInterface;
 
 /**
  * RateClient represents working with requests.
@@ -15,96 +17,72 @@ use Illuminate\Support\Facades\Log;
 
      private string $token;
      private Client $client;
+     private LoggerInterface $logger;
 
-     public function __construct(string $token, string $baseUri)
+     public function __construct(string $token, string $baseUri, LoggerInterface $logger)
      {
          $this->token = $token;
          $this->client = new Client(['base_uri' => $baseUri]);
+         $this->logger = $logger;
      }
 
      /**
-      * @param $base
-      * @param $symbol
-      * @return float Returns latest exchange rate
+      * @param Currency $currency
+      * @return Currency Returns latest exchange rate
       * @throws Exception
       */
-    public function getLatest($base, $symbol): float {
+    public function getLatest(Currency $currency): Currency {
 
-        $uri = sprintf('/v/latest?access_key=%s&symbols=%s', $this->token, $symbol);
+        $symbol = $currency->getSymbol();
 
-        try {
-            $response = $this->client->get($uri);
+        $uri = sprintf('/v1/latest?access_key=%s&symbols=%s', $this->token, $symbol);
 
-            $result = json_decode($response->getBody()->getContents(), true);
-
-            if (isset($result['rates'][$symbol])) {
-                return $result['rates'][$symbol];
-            }
-        } catch (\Throwable $e) {
-            Log::error($e);
-        }
-
-        throw new Exception('Unable to get latest rate!');
+        return $this->get($uri, $currency, $symbol);
     }
 
      /**
-      * @param $base
-      * @param $symbol
-      * @param $date
-      * @return float Returns the exchange rate for the selected date
+      * @param Currency $currency
+      * @param Carbon $date
+      * @return Currency Returns the exchange rate for the selected date
       * @throws Exception
       */
-     public function getByDate($base, $symbol, $date): float {
+     public function getByDate(Currency $currency, Carbon $date): Currency {
 
-         $uri = sprintf('/v1/%s?access_key=%s&symbols=%s', $date, $this->token, $symbol);
+         $symbol = $currency->getSymbol();
 
+         $uri = sprintf('/v1/%s?access_key=%s&symbols=%s', $date->toDateString(), $this->token, $symbol);
+
+         return $this->get($uri, $currency, $symbol);
+     }
+
+     /**
+      * @param string $uri
+      * @param Currency $currency
+      * @param string $symbol
+      * @return Currency
+      * @throws Exception
+      */
+     private function get(string $uri, Currency $currency, string $symbol): Currency {
          try {
              $response = $this->client->get($uri);
 
              $result = json_decode($response->getBody()->getContents(), true);
 
              if (isset($result['rates'][$symbol])) {
-                 return $result['rates'][$symbol];
+
+                 $date = Carbon::createFromFormat('Y-m-d', $result['date']);
+
+                 $currency->setPrice($result['rates'][$symbol]);
+                 $currency->setDate($date);
+
+                 return $currency;
+
              }
          } catch (\Throwable $e) {
-             Log::error($e);
+             $this->logger->error($e);
          }
 
-         throw new Exception('Unable to get rate by date!');
+         throw new Exception('Unable to get rate!');
      }
-
-     /**
-      * @param $base
-      * @param $symbol
-      * @param $date
-      * @return array Returns array with the exchange rate for the selected date and for the last month's exchange rate
-      * @throws Exception
-      */
-    public function getRatesByDate($base, $symbol, $date): array {
-        $startDate = date('Y-m-d', strtotime($date . '-1 month'));
-
-        $startUri = sprintf('/v1/%s?access_key=%s&symbols=%s', $startDate, $this->token, $symbol);
-        $endUri = sprintf('/v1/%s?access_key=%s&symbols=%s', $date, $this->token, $symbol);
-
-
-        try {
-            $startResponse = $this->client->get($startUri);
-            $endResponse = $this->client->get($endUri);
-
-            $startResult = json_decode($startResponse->getBody()->getContents(), true);
-            $endResult = json_decode($endResponse->getBody()->getContents(), true);
-
-            if (isset($startResult['rates'][$symbol]) && isset($endResult['rates'][$symbol])) {
-                return [
-                    'startRate' => $startResult['rates'][$symbol],
-                    'endRate' => $endResult['rates'][$symbol],
-                    ];
-            }
-        } catch (\Throwable $e) {
-            Log::error($e);
-        }
-
-        throw new Exception('Unable to get recommendation!');
-    }
 
 }

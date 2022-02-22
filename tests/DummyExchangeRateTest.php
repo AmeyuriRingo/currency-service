@@ -1,15 +1,28 @@
 <?php
 
-use App\Enums\StrategiesEnum;
-use App\Extensions\DummyExchangeRates\DummyExchangeRate;
+use App\Contracts\ClientInterface;
+use App\Extensions\Currency\Currency;
+use App\Extensions\ExchangeRates\DummyExchangeRate;
+use App\Extensions\ExchangeRates\RecommendationStrategies\ByDateStrategy;
+use App\Extensions\ExchangeRates\RecommendationStrategies\LatestStrategy;
+use App\Extensions\RateClient\RateClient;
+use Carbon\Carbon;
 
 class DummyExchangeRateTest extends TestCase
 {
     protected DummyExchangeRate $dummyExchangeRate;
+    protected ClientInterface $client;
+    protected Currency $currency;
 
     protected function setUp(): void
     {
         parent::setUp();
+
+        $currency = new Currency('BYN', 'BRL');
+        $currency->setPrice(1.124);
+        $currency->setDate(Carbon::createFromFormat('Y-m-d', '2015-05-21'));
+
+        $this->currency = $currency;
 
         $this->dummyExchangeRate = new DummyExchangeRate();
 
@@ -21,8 +34,8 @@ class DummyExchangeRateTest extends TestCase
     public function testDummyGetLatestRate()
     {
         $this->assertEquals(
-            3.124,
-            $this->dummyExchangeRate->getLatestRate('BYN', 'EUR')
+            $this->currency,
+            $this->dummyExchangeRate->getLatestRate($this->currency)
         );
     }
 
@@ -32,8 +45,8 @@ class DummyExchangeRateTest extends TestCase
     public function testDummyGetRateByDate()
     {
         $this->assertEquals(
-            4.567,
-            $this->dummyExchangeRate->getRateByDate('BYN', 'EUR', '11-12-2021')
+            $this->currency,
+            $this->dummyExchangeRate->getRateByDate($this->currency, $this->currency->getDate())
         );
     }
 
@@ -43,8 +56,8 @@ class DummyExchangeRateTest extends TestCase
     public function testDummyGetLatestRecommendationWithDate()
     {
         $this->assertEquals(
-            1.5786,
-            $this->dummyExchangeRate->getRecommendation('BYN', 'EUR',StrategiesEnum::LATEST, '11-11-2011')
+            3.124,
+            $this->dummyExchangeRate->getRecommendation($this->currency, new LatestStrategy(), $this->currency->getDate())
         );
     }
 
@@ -54,8 +67,8 @@ class DummyExchangeRateTest extends TestCase
     public function testDummyGetLatestRecommendationWithoutDate()
     {
         $this->assertEquals(
-            1.5786,
-            $this->dummyExchangeRate->getRecommendation('BYN', 'EUR',StrategiesEnum::LATEST)
+            3.124,
+            $this->dummyExchangeRate->getRecommendation($this->currency, new LatestStrategy())
         );
     }
 
@@ -65,8 +78,8 @@ class DummyExchangeRateTest extends TestCase
     public function testDummyGetRecommendationByDate()
     {
         $this->assertEquals(
-            0.5786,
-            $this->dummyExchangeRate->getRecommendation('BYN', 'EUR',StrategiesEnum::BY_DATE, '11-11-2011')
+            3.124,
+            $this->dummyExchangeRate->getRecommendation($this->currency, new ByDateStrategy(), $this->currency->getDate())
         );
     }
 }

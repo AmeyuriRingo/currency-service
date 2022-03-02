@@ -4,8 +4,8 @@ use App\Extensions\Currency\Currency;
 use App\Extensions\ExchangeRates\ExchangeRates;
 use App\Extensions\ExchangeRates\RecommendationStrategies\ByDateStrategy;
 use App\Extensions\ExchangeRates\RecommendationStrategies\LatestStrategy;
+use App\Extensions\Rate\Rate;
 use App\Extensions\RateClient\RateClient;
-use Carbon\Carbon;
 
 class ExchangeRatesTest extends TestCase
 {
@@ -13,20 +13,19 @@ class ExchangeRatesTest extends TestCase
      * Test get latest rate method.
      *
      * @return void
+     * @throws Exception
      */
     public function testGetLatestRate()
     {
-        $currency = new Currency('BYN', 'BRL');
-        $currency->setPrice(1.124);
-        $currency->setDate(Carbon::createFromFormat('Y-m-d H', '2015-05-21 22'));
+        $currency = new Rate(new Currency('BYN'), new Currency('BRL'), 1.124, new DateTimeImmutable('2015-05-21'));
 
         $clientMock = $this->createMock(RateClient::class);
-        $clientMock->method('getLatest')->with($currency)->willReturn($currency);
+        $clientMock->method('getLatest')->with($currency->getBase(), $currency->getSymbol())->willReturn($currency);
         $exchangeRate = new ExchangeRates($clientMock);
 
         $this->assertEquals(
             $currency,
-            $exchangeRate->getLatestRate($currency)
+            $exchangeRate->getLatestRate($currency->getBase(), $currency->getSymbol())
         );
     }
 
@@ -38,17 +37,15 @@ class ExchangeRatesTest extends TestCase
      */
     public function testGetRateByDate()
     {
-        $currency = new Currency('BYN', 'BRL');
-        $currency->setPrice(1.124);
-        $currency->setDate(Carbon::createFromFormat('Y-m-d H', '2015-05-21 22'));
+        $currency = new Rate(new Currency('BYN'), new Currency('BRL'), 1.124, new DateTimeImmutable('2015-05-21'));
 
         $clientMock = $this->createMock(RateClient::class);
-        $clientMock->method('getByDate')->with($currency, $currency->getDate())->willReturn($currency);
+        $clientMock->method('getByDate')->with($currency->getBase(), $currency->getSymbol(), $currency->getDate())->willReturn($currency);
         $exchangeRate = new ExchangeRates($clientMock);
 
         $this->assertEquals(
             $currency,
-            $exchangeRate->getRateByDate($currency, $currency->getDate())
+            $exchangeRate->getRateByDate($currency->getBase(), $currency->getSymbol(), $currency->getDate())
         );
     }
 
@@ -60,17 +57,15 @@ class ExchangeRatesTest extends TestCase
      */
     public function testGetLatestRecommendationWithDate()
     {
-        $currency = new Currency('BYN', 'BRL');
-        $currency->setPrice(1.124);
-        $currency->setDate(Carbon::createFromFormat('Y-m-d H', '2015-05-21 22'));
+        $currency = new Rate(new Currency('BYN'), new Currency('BRL'), 1.124, new DateTimeImmutable('2015-05-21'));
 
         $clientMock = $this->createMock(RateClient::class);
-        $clientMock->method('getLatest')->with($currency)->willReturn($currency);
+        $clientMock->method('getLatest')->with($currency->getBase(), $currency->getSymbol())->willReturn($currency);
         $exchangeRate = new ExchangeRates($clientMock);
 
         $this->assertEquals(
             $currency->getPrice(),
-            $exchangeRate->getRecommendation($currency, new LatestStrategy(), $currency->getDate())
+            $exchangeRate->getRecommendation($currency->getBase(), $currency->getSymbol(), new LatestStrategy(), $currency->getDate())
         );
     }
 
@@ -82,17 +77,15 @@ class ExchangeRatesTest extends TestCase
      */
     public function testGetLatestRecommendationWithoutDate()
     {
-        $currency = new Currency('BYN', 'BRL');
-        $currency->setPrice(1.124);
-        $currency->setDate(Carbon::createFromFormat('Y-m-d H', '2015-05-21 22'));
+        $currency = new Rate(new Currency('BYN'), new Currency('BRL'), 1.124, new DateTimeImmutable('2015-05-21'));
 
         $clientMock = $this->createMock(RateClient::class);
-        $clientMock->method('getLatest')->with($currency)->willReturn($currency);
+        $clientMock->method('getLatest')->with($currency->getBase(), $currency->getSymbol())->willReturn($currency);
         $exchangeRate = new ExchangeRates($clientMock);
 
         $this->assertEquals(
             $currency->getPrice(),
-            $exchangeRate->getRecommendation($currency, new LatestStrategy())
+            $exchangeRate->getRecommendation($currency->getBase(), $currency->getSymbol(), new LatestStrategy())
         );
     }
 
@@ -105,26 +98,23 @@ class ExchangeRatesTest extends TestCase
     public function testGetRecommendationByDate()
     {
 
-        $currency = new Currency('BYN', 'BRL');
-        $currency->setPrice(1.124);
-        $currency->setDate(Carbon::createFromFormat('Y-m-d', '2015-05-21'));
+        $currency = new Rate(new Currency('BYN'), new Currency('BRL'), 1.124, new DateTimeImmutable('2015-05-21'));
 
-        $date = date('Y-m-d', strtotime($currency->getDate() . '-1 month'));
-        $startDate = Carbon::createFromFormat('Y-m-d', $date);
+        $startDate = $currency->getDate()->sub(new DateInterval('P1M'));
 
         $clientMock = $this->createMock(RateClient::class);
         $clientMock
             ->method('getByDate')
             ->withConsecutive(
-                [$currency, $currency->getDate()],
-                [$currency, $startDate])
+                [$currency->getBase(), $currency->getSymbol(), $currency->getDate()],
+                [$currency->getBase(), $currency->getSymbol(), $startDate])
             ->willReturn($currency);
 
         $rate = new ExchangeRates($clientMock);
 
         $this->assertEquals(
             0,
-            $rate->getRecommendation($currency, new ByDateStrategy(), $currency->getDate())
+            $rate->getRecommendation($currency->getBase(), $currency->getSymbol(), new ByDateStrategy(), $currency->getDate())
         );
     }
 

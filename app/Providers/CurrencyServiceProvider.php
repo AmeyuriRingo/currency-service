@@ -8,6 +8,7 @@ use Illuminate\Support\ServiceProvider;
 use App\Contracts\CurrencyService;
 use App\Extensions\ExchangeRates\ExchangeRates;
 use App\Extensions\RateClient\RateClient;
+use Psr\Log\LoggerInterface;
 
 class CurrencyServiceProvider extends ServiceProvider
 {
@@ -18,8 +19,8 @@ class CurrencyServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->bind(ClientInterface::class, function () {
-            return new RateClient(env('CURRENCY_TOKEN'), 'http://api.exchangeratesapi.io', \Log::getLogger());
+        $this->app->bind(ClientInterface::class, function ($app) {
+            return new RateClient(env('CURRENCY_TOKEN'), 'http://api.exchangeratesapi.io', $app->make(LoggerInterface::class));
         });
 
 

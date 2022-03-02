@@ -3,7 +3,8 @@
 namespace App\Extensions\RateClient;
 
 use App\Extensions\Currency\Currency;
-use Carbon\Carbon;
+use App\Extensions\Rate\Rate;
+use DateTimeImmutable;
 use Exception;
 use GuzzleHttp\Client;
 use App\Contracts\ClientInterface;
@@ -27,62 +28,59 @@ use Psr\Log\LoggerInterface;
      }
 
      /**
-      * @param Currency $currency
-      * @return Currency Returns latest exchange rate
+      * @param Currency $base
+      * @param Currency $symbol
+      * @return Rate Returns latest exchange rate
       * @throws Exception
       */
-    public function getLatest(Currency $currency): Currency {
+    public function getLatest(Currency $base, Currency $symbol): Rate {
 
-        $symbol = $currency->getSymbol();
+        $uri = sprintf('/v1/latest?access_key=%s&symbols=%s', $this->token, $symbol->getCurrency());
 
-        $uri = sprintf('/v1/latest?access_key=%s&symbols=%s', $this->token, $symbol);
-
-        return $this->get($uri, $currency, $symbol);
+        return $this->get($uri, $base, $symbol);
     }
 
      /**
-      * @param Currency $currency
-      * @param Carbon $date
-      * @return Currency Returns the exchange rate for the selected date
+      * @param Currency $base
+      * @param Currency $symbol
+      * @param DateTimeImmutable $date
+      * @return Rate Returns the exchange rate for the selected date
       * @throws Exception
       */
-     public function getByDate(Currency $currency, Carbon $date): Currency {
+     public function getByDate(Currency $base, Currency $symbol, DateTimeImmutable $date): Rate {
 
-         $symbol = $currency->getSymbol();
+         $uri = sprintf('/v1/%s?access_key=%s&symbols=%s', $date->format('Y-m-d'), $this->token, $symbol->getCurrency());
 
-         $uri = sprintf('/v1/%s?access_key=%s&symbols=%s', $date->toDateString(), $this->token, $symbol);
-
-         return $this->get($uri, $currency, $symbol);
+         return $this->get($uri, $base, $symbol);
      }
 
      /**
       * @param string $uri
-      * @param Currency $currency
-      * @param string $symbol
-      * @return Currency
+      * @param Currency $base
+      * @param Currency $symbol
+      * @return Rate
       * @throws Exception
       */
-     private function get(string $uri, Currency $currency, string $symbol): Currency {
+     private function get(string $uri, Currency $base, Currency $symbol): Rate {
          try {
              $response = $this->client->get($uri);
 
              $result = json_decode($response->getBody()->getContents(), true);
 
-             if (isset($result['rates'][$symbol])) {
+             if (isset($result['rates'][$symbol->getCurrency()])) {
 
-                 $date = Carbon::createFromFormat('Y-m-d', $result['date']);
+                 $date = new DateTimeImmutable($result['date']);
 
-                 $currency->setPrice($result['rates'][$symbol]);
-                 $currency->setDate($date);
+                 return new Rate($base, $symbol, $result['rates'][$symbol->getCurrency()], $date);
 
-                 return $currency;
-
+             } else {
+                 $this->logger->error($result['error']);
              }
          } catch (\Throwable $e) {
              $this->logger->error($e);
          }
 
-         throw new Exception('Unable to get rate!');
+         throw new Exception('Unable to get rate');
      }
 
 }

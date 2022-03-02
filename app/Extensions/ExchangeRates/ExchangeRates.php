@@ -4,10 +4,10 @@ namespace App\Extensions\ExchangeRates;
 
 use App\Contracts\ClientInterface;
 use App\Contracts\RecommendationStrategy;
-use App\Extensions\Currency\Currency;
 use App\Contracts\CurrencyService;
-use Carbon\Carbon;
-use Exception;
+use App\Extensions\Currency\Currency;
+use App\Extensions\Rate\Rate;
+use DateTimeImmutable;
 
 /**
  * ExchangeRates represents working with exchange rates api.
@@ -22,34 +22,36 @@ class ExchangeRates implements CurrencyService
     }
 
     /**
-     * @param Currency $currency
-     * @return Currency Returns exchangeratesapi response of the latest exchange rate
+     * @param Currency $base
+     * @param Currency $symbol
+     * @return Rate Returns exchangeratesapi response of the latest exchange rate
      */
-    public function getLatestRate(Currency $currency): Currency
+    public function getLatestRate(Currency $base, Currency $symbol): Rate
     {
-        return $this->client->getLatest($currency);
+        return $this->client->getLatest($base, $symbol);
     }
 
     /**
-     * @param Currency $currency
-     * @param Carbon $date
-     * @return Currency Returns exchangeratesapi response of the exchange rate for the selected date
+     * @param Currency $base
+     * @param Currency $symbol
+     * @param DateTimeImmutable $date
+     * @return Rate Returns exchangeratesapi response of the exchange rate for the selected date
      */
-    public function getRateByDate(Currency $currency, Carbon $date): Currency
+    public function getRateByDate(Currency $base, Currency $symbol, DateTimeImmutable $date): Rate
     {
-        return $this->client->getByDate($currency, $date);
+        return $this->client->getByDate($base, $symbol, $date);
     }
 
     /**
-     * @param Currency $currency
+     * @param Currency $base
+     * @param Currency $symbol
      * @param RecommendationStrategy $strategy
-     * @param Carbon|null $date
+     * @param DateTimeImmutable|null $date
      * @return float Return exchangeratesapi response according to date
-     * @throws Exception
      */
-    public function getRecommendation(Currency $currency, RecommendationStrategy $strategy, Carbon $date = null): float
+    public function getRecommendation(Currency $base, Currency $symbol, RecommendationStrategy $strategy, DateTimeImmutable $date = null): float
     {
-        return $strategy->execute($currency, $this->client, $date);
+        return $strategy->execute($base, $symbol, $this->client, $date);
     }
 
 }

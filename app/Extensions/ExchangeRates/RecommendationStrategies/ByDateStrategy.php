@@ -5,7 +5,7 @@ namespace App\Extensions\ExchangeRates\RecommendationStrategies;
 use App\Contracts\ClientInterface;
 use App\Contracts\RecommendationStrategy;
 use App\Extensions\Currency\Currency;
-use Carbon\Carbon;
+use DateTimeImmutable;
 use Exception;
 
 /**
@@ -14,18 +14,18 @@ use Exception;
 class ByDateStrategy implements RecommendationStrategy
 {
     /**
-     * @param Currency $currency
+     * @param Currency $base
+     * @param Currency $symbol
      * @param ClientInterface $client
-     * @param Carbon|null $date
+     * @param DateTimeImmutable|null $date
      * @return float
      * @throws Exception
      */
-    public function execute(Currency $currency, ClientInterface $client, Carbon $date = null): float {
-        $startDate = date('Y-m-d', strtotime($date . '-1 month'));
-        $startDate = Carbon::createFromFormat('Y-m-d', $startDate);
+    public function execute(Currency $base, Currency $symbol, ClientInterface $client, DateTimeImmutable $date = null): float {
+        $startDate = $date->sub(new \DateInterval('P1M'));
 
-        $startResponse = $client->getByDate($currency, $date);
-        $endResponse = $client->getByDate($currency, $startDate);
+        $startResponse = $client->getByDate($base, $symbol, $date);
+        $endResponse = $client->getByDate($base, $symbol, $startDate);
 
         if (!empty($startResponse) && !empty($endResponse)) {
             return round(($endResponse->getPrice() - $startResponse->getPrice()), 6);

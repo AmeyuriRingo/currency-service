@@ -3,13 +3,14 @@
 namespace App\Contracts;
 
 use App\Extensions\Currency\Currency;
-use Carbon\Carbon;
+use App\Extensions\Rate\Rate;
+use DateTimeImmutable;
 
 interface ClientInterface
 {
 
-    public function getLatest(Currency $currency): Currency;
+    public function getLatest(Currency $base, Currency $symbol): Rate;
 
-    public function getByDate(Currency $currency, Carbon $date): Currency;
+    public function getByDate(Currency $base, Currency $symbol, DateTimeImmutable $date): Rate;
 
 }

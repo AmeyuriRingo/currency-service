@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Contracts\CheckCurrency;
 use App\Enums\StrategiesEnum;
-use App\Extensions\Currency\Currency;
 use App\Contracts\CurrencyService;
+use App\Extensions\Currency\Currency;
 use App\Extensions\ExchangeRates\RecommendationStrategies\ByDateStrategy;
 use App\Extensions\ExchangeRates\RecommendationStrategies\LatestStrategy;
-use Carbon\Carbon;
+use DateTimeImmutable;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Laravel\Lumen\Application;
@@ -41,22 +41,21 @@ class PageController extends Controller
     public function rate(Request $request)
     {
         try {
-            $symbol = new CheckCurrency($request->symbol);
-            $base = new CheckCurrency($request->base);
-            $currency = new Currency($base->getCurrency(), $symbol->getCurrency());
+            $symbol = new Currency($request->symbol);
+            $base = new Currency($request->base);
         } catch (\InvalidArgumentException $e) {
             return view('home', ['error' => $e->getMessage(), 'strategies' => StrategiesEnum::toArray()]);
         }
 
         try {
-            $rate = $this->currency->getLatestRate($currency);
+            $rate = $this->currency->getLatestRate($base, $symbol);
 
             return view('rate', ['data' => [
                 'base'=> 'EUR',
                 'symbol' => $request->symbol,
                 'rate'=> $rate->getPrice()
             ]]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
 
             return view('errors.404', ['errorMessage' => $e->getMessage()]);
         }
@@ -68,21 +67,21 @@ class PageController extends Controller
      *
      * @param Request $request
      * @return View|Application
+     * @throws Exception
      */
     public function rateByDate(Request $request)
     {
         try {
-            $symbol = new CheckCurrency($request->symbol);
-            $base = new CheckCurrency($request->base);
-            $date = Carbon::createFromFormat('Y-m-d', $request->date);
-            $currency = new Currency($base->getCurrency(), $symbol->getCurrency());
+            $symbol = new Currency($request->symbol);
+            $base = new Currency($request->base);
+            $date = new DateTimeImmutable( $request->date);
         } catch (\InvalidArgumentException $e) {
             return view('home', ['error' => $e->getMessage()]);
         }
 
 
         try {
-            $rate = $this->currency->getRateByDate($currency, $date);
+            $rate = $this->currency->getRateByDate($base, $symbol, $date);
 
             return view('rate', ['data' => [
                 'base'=> 'EUR',
@@ -90,7 +89,7 @@ class PageController extends Controller
                 'date' => $request->date,
                 'rate'=> $rate->getPrice()
             ]]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
 
             return view('errors.404', ['errorMessage' => $e->getMessage()]);
         }
@@ -106,9 +105,8 @@ class PageController extends Controller
     public function recommendations(Request $request)
     {
         try {
-            $symbol = new CheckCurrency($request->symbol);
-            $base = new CheckCurrency($request->base);
-            $currency = new Currency($base->getCurrency(), $symbol->getCurrency());
+            $symbol = new Currency($request->symbol);
+            $base = new Currency($request->base);
         } catch (\InvalidArgumentException $e) {
             return view('home', ['error' => $e->getMessage()]);
         }
@@ -117,11 +115,11 @@ class PageController extends Controller
 
             if ($request->strategy == StrategiesEnum::LATEST()) {
                 $strategy = new LatestStrategy();
-                $recommendation = $this->currency->getRecommendation($currency, $strategy);
+                $recommendation = $this->currency->getRecommendation($base, $symbol, $strategy);
             } else if ($request->strategy == StrategiesEnum::BY_DATE()) {
                 $strategy = new ByDateStrategy();
-                $date = Carbon::createFromFormat('Y-m-d', $request->date);
-                $recommendation = $this->currency->getRecommendation($currency, $strategy, $date);
+                $date = new DateTimeImmutable($request->date);
+                $recommendation = $this->currency->getRecommendation($base, $symbol, $strategy, $date);
             }
 
             return view('recommendations', ['data' => [
@@ -130,7 +128,7 @@ class PageController extends Controller
                 'date' => $request->date,
                 'recommendation'=> $recommendation
             ]]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
 
             return view('errors.404', ['errorMessage' => $e->getMessage()]);
         }

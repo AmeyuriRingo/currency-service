@@ -3,9 +3,9 @@
 namespace App\Contracts;
 
 use App\Extensions\Currency\Currency;
-use Carbon\Carbon;
+use DateTimeImmutable;
 
 interface RecommendationStrategy
 {
-    public function execute(Currency $currency, ClientInterface $client, Carbon $date = null): float;
+    public function execute(Currency $base, Currency $symbol, ClientInterface $client, DateTimeImmutable $date = null): float;
 }
